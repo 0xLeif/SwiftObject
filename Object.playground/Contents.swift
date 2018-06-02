@@ -1,6 +1,6 @@
 //: Playground - noun: a place where people can play
 
-struct Object {
+class Object {
     var f: [String: (Any?) -> Any?] = [:]
     var v: [String: Any?] = [:]
     func f(_ named: String) -> (Any?) -> Any? {
@@ -21,10 +21,19 @@ struct Object {
         }
         return value
     }
+    func av(_ named: String, value: Any) {
+        v[named] = value
+    }
+    func af(named: String, value: @escaping (Any?) -> Any?) {
+        f[named] = value
+    }
+    func rf(named: String, value: Any? = nil) -> Any? {
+        return f(named)(value)
+    }
 }
 
 func objExample() -> Object {
-    var obj = Object()
+    let obj = Object()
     //Setting values
     obj.v["abc"] = "How are you"
     obj.v["pi"] = 3.14
@@ -34,7 +43,7 @@ func objExample() -> Object {
     return obj
 }
 
-var obj = objExample()
+let obj = objExample()
 
 obj.v["pre"] = "LOG:"
 obj.v["sum"] = 0
@@ -49,13 +58,13 @@ obj.f["incBy"] = { toAdd in
     return obj.v["sum"] = sum + inc
 }
 
-let print = obj.f("print")
-print("gdsg")
+let prin = obj.f("print")
+prin("gdsg")
 
 let add = obj.f("incBy")
 add(3)
 add(1)
-print(obj.v("sum"))
+prin(obj.v("sum"))
 
-print(obj.v("pi"))
-print(obj.v("pi", ofType: Float.self))
+prin(obj.v("pi"))
+prin(obj.v("pi", ofType: Float.self))
