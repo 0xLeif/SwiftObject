@@ -1,61 +1,60 @@
-//: Playground - noun: a place where people can play
+import UIKit
 
-struct Object {
-    var f: [String: (Any?) -> Any?] = [:]
-    var v: [String: Any?] = [:]
-    func f(_ named: String) -> (Any?) -> Any? {
+/// Attempt to make a simple JavaScript-like Object in Swift
+class Object {
+    typealias ObjectFunction = (Any?) -> Any?
+    typealias ObjectVariable = Any
+    /// Functions of the object
+    var f: [String: ObjectFunction] = [:]
+    /// Variables of the object
+    var v: [String: ObjectVariable] = [:]
+    /// Retrieve a Function from the current object
+    func f(_ named: String) -> ObjectFunction {
         guard let function = f[named] else {
-            return { _ in nil }
+            return { _ in NSNull() }
         }
         return function
     }
-    func v(_ named: String) -> Any? {
-        return v[named] ?? nil
+    /// Retrieve a Value from the current object
+    func v(_ named: String) -> ObjectVariable {
+        return unwrap(value: v[named] ?? NSNull())
     }
-    func uv(_ named: String) -> Any {
-        return v(named) ?? false
+    /// Add a Value with a name to the current object
+    func av(_ named: String, value: ObjectVariable) {
+        v[named] = value
     }
-    func v<E>(_ named: String, ofType: E) -> E? {
-        guard let value = v(named) as? E else {
-            return nil
-        }
-        return value
+    /// Add a Function with a name and a closure to the current object
+    func af(named: String, value: @escaping ObjectFunction) {
+        f[named] = value
+    }
+    /// Run a Function with or without a value
+    func rf(named: String, value: ObjectVariable = NSNull()) -> ObjectVariable? {
+        return f(named)(value)
+    }
+    ///Run a Function with a internal value
+    func rf(named: String, withInteralValueName iValueName: String) -> ObjectVariable? {
+        return f(named)(v(iValueName))
+    }
+    /// Unwraps the <Optional> Any type
+    private func unwrap(value: ObjectVariable) -> ObjectVariable {
+        let mValue = Mirror(reflecting: value)
+        let isValueOptional = mValue.displayStyle != .optional
+        let isValueEmpty = mValue.children.isEmpty
+        if isValueOptional { return value }
+        if isValueEmpty { return NSNull() }
+        guard let (_, unwrappedValue) = mValue.children.first else { return NSNull() }
+        return unwrappedValue
     }
 }
 
-func objExample() -> Object {
-    var obj = Object()
-    //Setting values
-    obj.v["abc"] = "How are you"
-    obj.v["pi"] = 3.14
-    obj.f["nothing"] = { _ in
-        return 1
-    }
-    return obj
+
+var obj = Object()
+obj.v["qwerty"] = 12456
+obj.f["printy"] = { input in
+    print("[[{ \(input) }]]")
+    return "{ \(input) }"
 }
 
-var obj = objExample()
 
-obj.v["pre"] = "LOG:"
-obj.v["sum"] = 0
-obj.f["print"] = { str in 
-    return print("\(obj.uv("pre")) \(str ?? "")") 
-}
-obj.f["incBy"] = { toAdd in
-    guard let sum = obj.v("sum") as? Int,
-        let inc = toAdd as? Int else {
-        return nil
-    }
-    return obj.v["sum"] = sum + inc
-}
-
-let print = obj.f("print")
-print("gdsg")
-
-let add = obj.f("incBy")
-add(3)
-add(1)
-print(obj.v("sum"))
-
-print(obj.v("pi"))
-print(obj.v("pi", ofType: Float.self))
+obj.rf(named: "printy", value: obj.v("qwerty"))
+obj.rf(named: "printy", withInteralValueName: "qwerty")
